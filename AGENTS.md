@@ -12,7 +12,8 @@ Simple static HTML5 Canvas Snake game. No bundler, no package manager, no build 
 ## Code Structure & Quirks
 - **Grid size**: 40 cols x 16 rows. Box size is 30px (1200x480 canvas).
 - **Canvas context**: Retains standard rendering context.
-- **Controls**: Arrow keys and WASD (case-insensitive checks, active on `keydown`).
+- **Controls**: Arrow keys and WASD (case-insensitive checks, active on `keydown`). Spacebar pauses/resumes the game.
+- **Countdown**: 3-second visual countdown delay (overlay on canvas) when resuming from pause.
 - **State**: Game loop starts only after clicking **Start Game** and choosing a direction. Timer does not count down while snake is stationary.
 - **DOM updates**: Always use `textContent` instead of `innerHTML` for performance and safety.
 - **Visuals**: Snake body drawn with dynamic emerald green gradient (`#10b981` to darker transparent green). Food drawn with shadow, glare, and stem details.

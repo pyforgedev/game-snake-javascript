@@ -31,6 +31,8 @@
 *   **🎮 Kontrol Responsif**: Mendukung penuh kontrol ganda via **WASD** dan **Arrow Keys** (tombol arah).
 *   **🍎 Desain Aset Dinamis**: Makanan berbentuk buah apel dengan bayangan, kilau cahaya, dan daun kecil. Ular memiliki warna gradasi dinamis dari kepala ke ekor.
 *   **⏱️ Mekanisme Timer Pintar**: Timer 60 detik hanya berjalan ketika ular mulai bergerak, mencegah kekalahan instan saat pertama kali bermain.
+*   **⏱️ Jeda & Hitung Mundur**: Fitur jeda (pause) dilengkapi dengan hitung mundur 3 detik saat permainan dilanjutkan (resume) agar pemain dapat bersiap.
+*   **⌨️ Shortcut Tombol Spasi**: Mempermudah menjeda dan melanjutkan permainan langsung menggunakan tombol <kbd>Space</kbd>.
 *   **🛡️ Algoritma Bebas Tabrakan Makanan**: Menjamin buah apel baru tidak akan pernah bertelur di atas koordinat tubuh ular.
 *   **⚡ Overlay Game Over Asli**: Menghapus `alert()` bawaan browser yang mengganggu alur bermain, digantikan dengan modal popup UI interaktif.
 
@@ -46,6 +48,7 @@ Gunakan tombol berikut di keyboard Anda untuk mengarahkan ular:
 | **Bawah** | <kbd>S</kbd> | <kbd>↓</kbd> |
 | **Kiri** | <kbd>A</kbd> | <kbd>←</kbd> |
 | **Kanan** | <kbd>D</kbd> | <kbd>→</kbd> |
+| **Jeda / Lanjut** | <kbd>Space</kbd> | |
 
 ---
 
