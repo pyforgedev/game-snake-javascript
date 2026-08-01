@@ -8,11 +8,21 @@ const snakeTimeEl = document.getElementById("time");
 
 const startOverlay = document.getElementById("start-overlay");
 const gameoverOverlay = document.getElementById("gameover-overlay");
+const settingsOverlay = document.getElementById("settings-overlay");
+
 const finalScoreSpan = document.getElementById("final-score");
 const finalTimeSpan = document.getElementById("final-time");
+const pauseScoreSpan = document.getElementById("pause-score");
+const pauseTimeSpan = document.getElementById("pause-time");
 
 const btnStart = document.getElementById("btn-start");
 const btnRestart = document.getElementById("btn-restart");
+const btnSettings = document.getElementById("btn-settings");
+const btnResume = document.getElementById("btn-resume");
+const btnPauseRestart = document.getElementById("btn-pause-restart");
+
+const toggleBgm = document.getElementById("toggle-bgm");
+const toggleSfx = document.getElementById("toggle-sfx");
 
 const box = 30;
 const cols = 40;
@@ -24,14 +34,165 @@ let currentDirection = "";
 let timeRemaining = 60;
 let score = 0;
 let isPlaying = false;
+let isPaused = false;
+
+// Audio variables
+let audioCtx = null;
+let bgmInterval = null;
+let isBgmEnabled = true;
+let isSfxEnabled = true;
+let currentBgmNoteIndex = 0;
+
+const bgmNotes = [
+  261.63, 293.66, 329.63, 349.23, 392.00, 349.23, 329.63, 293.66,
+  329.63, 349.23, 392.00, 440.00, 493.88, 440.00, 392.00, 349.23
+];
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function playBgmStep() {
+  if (!isBgmEnabled || isPaused || !isPlaying || !audioCtx) return;
+  
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(bgmNotes[currentBgmNoteIndex], audioCtx.currentTime);
+  
+  gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.28);
+  
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  
+  osc.onended = () => {
+    osc.disconnect();
+    gain.disconnect();
+  };
+  
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.3);
+  
+  currentBgmNoteIndex = (currentBgmNoteIndex + 1) % bgmNotes.length;
+}
+
+function startBgm() {
+  stopBgm();
+  if (isBgmEnabled && isPlaying && !isPaused) {
+    initAudio();
+    bgmInterval = setInterval(playBgmStep, 300);
+  }
+}
+
+function stopBgm() {
+  if (bgmInterval) {
+    clearInterval(bgmInterval);
+    bgmInterval = null;
+  }
+}
+
+function playEatSfx() {
+  if (!isSfxEnabled || !audioCtx) return;
+  
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  
+  osc.type = "sine";
+  const now = audioCtx.currentTime;
+  
+  osc.frequency.setValueAtTime(523.25, now); // C5
+  osc.frequency.setValueAtTime(783.99, now + 0.08); // G5
+  osc.frequency.setValueAtTime(1046.50, now + 0.16); // C6
+  
+  gain.gain.setValueAtTime(0.1, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+  
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  
+  osc.onended = () => {
+    osc.disconnect();
+    gain.disconnect();
+  };
+  
+  osc.start();
+  osc.stop(now + 0.3);
+}
 
 // Event Listeners
 btnStart.addEventListener("click", startGame);
 btnRestart.addEventListener("click", reloadGame);
 document.addEventListener("keydown", handleDirectionInput);
 
+btnSettings.addEventListener("click", openSettings);
+btnResume.addEventListener("click", resumeGame);
+btnPauseRestart.addEventListener("click", resetGameFromSettings);
+
+toggleBgm.addEventListener("change", (e) => {
+  isBgmEnabled = e.target.checked;
+  if (!isBgmEnabled) stopBgm();
+  else if (isPlaying && !isPaused) startBgm();
+});
+
+toggleSfx.addEventListener("change", (e) => {
+  isSfxEnabled = e.target.checked;
+});
+
+function openSettings() {
+  if (!gameoverOverlay.classList.contains("hidden")) return;
+  
+  if (isPlaying && !isPaused) {
+    pauseGame();
+  }
+  
+  const settingsTitleEl = document.getElementById("settings-title");
+  const settingsStatsEl = document.getElementById("settings-stats");
+  
+  if (isPlaying) {
+    settingsTitleEl.textContent = "GAME PAUSED";
+    settingsStatsEl.classList.remove("hidden");
+    pauseScoreSpan.textContent = score;
+    pauseTimeSpan.textContent = timeRemaining;
+  } else {
+    settingsTitleEl.textContent = "SETTINGS";
+    settingsStatsEl.classList.add("hidden");
+  }
+  
+  settingsOverlay.classList.remove("hidden");
+}
+
+function resetGameFromSettings() {
+  settingsOverlay.classList.add("hidden");
+  isPaused = false;
+  reloadGame();
+}
+
+function pauseGame() {
+  if (!isPlaying || isPaused) return;
+  isPaused = true;
+  settingsOverlay.classList.remove("hidden");
+  stopBgm();
+}
+
+function resumeGame() {
+  if (!isPlaying || !isPaused) {
+    settingsOverlay.classList.add("hidden");
+    return;
+  }
+  isPaused = false;
+  settingsOverlay.classList.add("hidden");
+  if (isBgmEnabled) startBgm();
+}
+
 function handleDirectionInput(e) {
-  if (!isPlaying) return;
+  if (!isPlaying || isPaused) return;
   const key = e.key.toLowerCase();
   
   if ((e.key === "ArrowLeft" || key === "a") && currentDirection !== "RIGHT") {
@@ -181,6 +342,13 @@ function draw() {
 
   // Ular bergerak hanya jika pemain sudah memilih arah
   if (currentDirection !== "") {
+    if (isPaused) return;
+    
+    // Start BGM on first move if not already playing
+    if (isBgmEnabled && !bgmInterval) {
+      startBgm();
+    }
+
     let snakeX = snake[0].x;
     let snakeY = snake[0].y;
 
@@ -208,6 +376,7 @@ function draw() {
       score++;
       snakeScoreEl.textContent = score;
       food = generateFood();
+      playEatSfx();
     } else {
       snake.pop();
     }
@@ -231,22 +400,33 @@ function drawRoundRect(x, y, w, h, r) {
 }
 
 function startGame() {
-  if (gameInterval) clearInterval(gameInterval);
-  if (timerInterval) clearInterval(timerInterval);
+  if (gameInterval) {
+    clearInterval(gameInterval);
+    gameInterval = null;
+  }
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
 
   initGame();
+  initAudio();
   isPlaying = true;
+  isPaused = false;
   
   startOverlay.classList.add("hidden");
   gameoverOverlay.classList.add("hidden");
+  settingsOverlay.classList.add("hidden");
+  
+  stopBgm();
   
   // Game tick interval
   gameInterval = setInterval(draw, 100);
   
   // Timer interval
   timerInterval = setInterval(() => {
-    // Timer berkurang hanya jika ular mulai bergerak
-    if (currentDirection !== "") {
+    // Timer berkurang hanya jika ular mulai bergerak dan game tidak di-pause
+    if (currentDirection !== "" && !isPaused) {
       timeRemaining--;
       snakeTimeEl.textContent = timeRemaining;
       
@@ -259,8 +439,17 @@ function startGame() {
 
 function endGame() {
   isPlaying = false;
-  if (gameInterval) clearInterval(gameInterval);
-  if (timerInterval) clearInterval(timerInterval);
+  isPaused = false;
+  stopBgm();
+  
+  if (gameInterval) {
+    clearInterval(gameInterval);
+    gameInterval = null;
+  }
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
   
   finalScoreSpan.textContent = score;
   finalTimeSpan.textContent = timeRemaining;
@@ -272,6 +461,10 @@ function reloadGame() {
   gameoverOverlay.classList.add("hidden");
   startGame();
 }
+
+// Sinkronkan UI dengan initial state js
+toggleBgm.checked = isBgmEnabled;
+toggleSfx.checked = isSfxEnabled;
 
 // Gambar screen awal sekali saja
 initGame();

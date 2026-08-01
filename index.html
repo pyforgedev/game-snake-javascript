@@ -8,6 +8,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+    <link rel="manifest" href="favicon/site.webmanifest">
   </head>
   <body>
     <div class="game-container">
@@ -15,6 +19,12 @@
         <h1 class="game-title">SNAKE<span>.JS</span></h1>
         
         <div class="stats-panel">
+          <button id="btn-settings" class="btn-settings-icon" aria-label="Settings">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </button>
           <div class="stat-card">
             <span class="stat-label">SCORE</span>
             <span id="score" class="stat-value">0</span>
@@ -29,6 +39,39 @@
       <div class="canvas-wrapper">
         <canvas id="snake" width="1200" height="480"></canvas>
         
+        <!-- Settings Overlay -->
+        <div id="settings-overlay" class="overlay hidden">
+          <div class="overlay-content">
+            <h2 id="settings-title">GAME PAUSED</h2>
+            <div id="settings-stats" class="final-stats">
+              <div class="final-stat">
+                <span>Current Score</span>
+                <strong id="pause-score">0</strong>
+              </div>
+              <div class="final-stat">
+                <span>Time Left</span>
+                <strong id="pause-time">60</strong>
+              </div>
+            </div>
+            <div class="settings-options">
+              <div class="toggle-container">
+                <label class="switch-label">
+                  <span>BGM MUSIC</span>
+                  <input type="checkbox" id="toggle-bgm" checked>
+                </label>
+                <label class="switch-label">
+                  <span>SFX SOUND</span>
+                  <input type="checkbox" id="toggle-sfx" checked>
+                </label>
+              </div>
+            </div>
+            <div class="settings-actions">
+              <button id="btn-resume" class="btn-primary">RESUME</button>
+              <button id="btn-pause-restart" class="btn-primary btn-warning">RESTART</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Start/Intro Screen -->
         <div id="start-overlay" class="overlay">
           <div class="overlay-content">
@@ -54,7 +97,7 @@
                 <strong id="final-time">0</strong>
               </div>
             </div>
-            <button id="btn-restart" class="btn-primary">
+            <button id="btn-restart" class="btn-primary btn-danger">
               PLAY AGAIN
             </button>
           </div>
