@@ -1,37 +1,92 @@
-# Snake.js - Retro Modern HTML5 Canvas Game
+# 🐍 Snake.js — Retro Modern Canvas Game
 
-Game Snake klasik berpenampilan modern dengan gaya neon-dark, dibangun murni menggunakan HTML5 Canvas, CSS, dan JavaScript vanilla.
+<div align="center">
 
-🚀 **[Demo Aplikasi](https://sfl.gl/ckOSRiL)**
+  [![Live Demo](https://img.shields.io/badge/Demo-Live_Preview-emerald?style=for-the-badge&logo=vercel&logoColor=white)](https://mysnake.pyforgedev.web.id/)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blue.svg?style=for-the-badge)](http://makeapullrequest.com)
 
----
+  <p align="center">
+    Game Snake klasik berpenampilan modern dengan gaya <i>neon-dark</i>. Dibangun murni menggunakan HTML5 Canvas, CSS3, dan Vanilla JavaScript tanpa external bundler atau runtime library.
+  </p>
 
-## Fitur Baru & Peningkatan
-- **UI Gelap Modern**: Desain bernuansa *dark mode* menggunakan variabel CSS, font Plus Jakarta Sans, dan efek *glassmorphism*.
-- **Gameplay Halus**:
-  - Kontrol ganda melalui keyboard (**WASD** dan **Arrow Keys**).
-  - Mulai dinamis: Ular tetap diam saat *start* sampai Anda menentukan arah pertama (mencegah mati instan).
-  - Makanan didesain mirip buah apel dengan bayangan, kilau, dan daun kecil.
-  - Ular memiliki warna gradasi dinamis dari kepala hingga ekor.
-- **Bebas Alert**: Penggunaan `alert()` bawaan browser diganti dengan overlay DOM terintegrasi yang interaktif.
-- **Sistem Penguncian Makanan**: Logika baru memastikan makanan tidak akan pernah muncul di atas tubuh ular.
+</div>
 
 ---
 
-## Cara Menjalankan
-Proyek ini statis murni tanpa bundler.
+## 🛠️ Tech Stack & Perkakas
 
-1. Clone repositori ini.
-2. Jalankan server lokal untuk menghindari isu CORS (opsional tapi disarankan):
+| Kategori | Teknologi | Badges |
+|---|---|---|
+| **Markup** | HTML5 | ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=flat-square&logo=html5&logoColor=white) |
+| **Styling** | CSS3 | ![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=flat-square&logo=css3&logoColor=white) |
+| **Logic** | Vanilla JS | ![JavaScript](https://img.shields.io/badge/javascript-%23F7DF1E.svg?style=flat-square&logo=javascript&logoColor=black) |
+| **Fonts** | Google Fonts | ![Google Fonts](https://img.shields.io/badge/Google_Fonts-4285F4?style=flat-square&logo=google&logoColor=white) |
+
+---
+
+## ✨ Fitur Utama
+
+*   **🎨 UI Gelap Modern (Neon-Dark)**: Tampilan visual berbasis *glassmorphism* dengan kombinasi warna gelap redup (`#0f172a`) dan aksen hijau emerald (`#10b981`).
+*   **🎮 Kontrol Responsif**: Mendukung penuh kontrol ganda via **WASD** dan **Arrow Keys** (tombol arah).
+*   **🍎 Desain Aset Dinamis**: Makanan berbentuk buah apel dengan bayangan, kilau cahaya, dan daun kecil. Ular memiliki warna gradasi dinamis dari kepala ke ekor.
+*   **⏱️ Mekanisme Timer Pintar**: Timer 60 detik hanya berjalan ketika ular mulai bergerak, mencegah kekalahan instan saat pertama kali bermain.
+*   **🛡️ Algoritma Bebas Tabrakan Makanan**: Menjamin buah apel baru tidak akan pernah bertelur di atas koordinat tubuh ular.
+*   **⚡ Overlay Game Over Asli**: Menghapus `alert()` bawaan browser yang mengganggu alur bermain, digantikan dengan modal popup UI interaktif.
+
+---
+
+## 🎮 Kontrol Permainan
+
+Gunakan tombol berikut di keyboard Anda untuk mengarahkan ular:
+
+| Aksi | Keyboard Utama | Keyboard Alternatif |
+|---|---|---|
+| **Atas** | <kbd>W</kbd> | <kbd>↑</kbd> |
+| **Bawah** | <kbd>S</kbd> | <kbd>↓</kbd> |
+| **Kiri** | <kbd>A</kbd> | <kbd>←</kbd> |
+| **Kanan** | <kbd>D</kbd> | <kbd>→</kbd> |
+
+---
+
+## 📂 Struktur Proyek
+
+```text
+📁 game-snake-javascript-master/
+├── 📁 docs/                 # Audit otomatis proyek
+├── 📄 .gitignore            # Konfigurasi pengecualian Git
+├── 📄 AGENTS.md             # Panduan khusus untuk OpenCode AI agent
+├── 📄 index.html            # File HTML utama (struktur UI)
+├── 📄 LICENSE               # Lisensi proyek (MIT)
+├── 📄 README.md             # Dokumentasi utama proyek
+├── 📄 snake.js              # Game engine dan rendering loop
+└── 📄 style.css             # Tata letak & styling tema neon-dark
+```
+
+---
+
+## 🚀 Cara Menjalankan Secara Lokal
+
+Proyek ini tidak memerlukan instalasi dependensi pihak ketiga atau proses build (*zero configuration*).
+
+1. Clone repositori ini ke komputer lokal Anda:
    ```bash
-   python3 -m http.server 8000
+   git clone https://github.com/pyforgedev/game-snake-javascript.git
    ```
-3. Buka browser di `http://localhost:8000`.
+2. Jalankan server lokal untuk menghindari masalah keamanan CORS pada browser:
+   *   **Python**:
+       ```bash
+       python3 -m http.server 8000
+       ```
+   *   **Node.js (serve)**:
+       ```bash
+       npx serve .
+       ```
+3. Buka alamat `http://localhost:8000` (atau port yang tertera) di browser kesayangan Anda.
 
 ---
 
-## Struktur Berkas
-- `index.html`: Struktur utama halaman game.
-- `style.css`: Pengaturan gaya visual modern.
-- `snake.js`: Logika mesin game, pergerakan ular, kolisi, dan sistem rendering canvas.
-- `AGENTS.md`: Dokumentasi panduan khusus untuk agen AI.
+## 📄 Lisensi
+
+Proyek ini dilisensikan di bawah **Lisensi MIT** - lihat file [LICENSE](LICENSE) untuk detail lebih lanjut.
+
