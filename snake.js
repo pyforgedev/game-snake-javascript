@@ -129,7 +129,21 @@ function playEatSfx() {
 // Event Listeners
 btnStart.addEventListener("click", startGame);
 btnRestart.addEventListener("click", reloadGame);
-document.addEventListener("keydown", handleDirectionInput);
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space" || e.key === " ") {
+    e.preventDefault();
+    if (!isPlaying) return;
+    const countdown = document.getElementById("countdown-overlay");
+    if (countdown && !countdown.classList.contains("hidden")) return;
+    if (isPaused) {
+      resumeGame();
+    } else {
+      openSettings();
+    }
+  } else {
+    handleDirectionInput(e);
+  }
+});
 
 btnSettings.addEventListener("click", openSettings);
 btnResume.addEventListener("click", resumeGame);
@@ -169,6 +183,10 @@ function openSettings() {
 }
 
 function resetGameFromSettings() {
+  const countdownOverlay = document.getElementById("countdown-overlay");
+  if (countdownOverlay) {
+    countdownOverlay.classList.add("hidden");
+  }
   settingsOverlay.classList.add("hidden");
   isPaused = false;
   reloadGame();
@@ -186,13 +204,46 @@ function resumeGame() {
     settingsOverlay.classList.add("hidden");
     return;
   }
-  isPaused = false;
+  
   settingsOverlay.classList.add("hidden");
-  if (isBgmEnabled) startBgm();
+  
+  // Buat overlay countdown
+  let countdownOverlay = document.getElementById("countdown-overlay");
+  if (!countdownOverlay) {
+    countdownOverlay = document.createElement("div");
+    countdownOverlay.id = "countdown-overlay";
+    countdownOverlay.className = "overlay";
+    countdownOverlay.style.background = "rgba(15, 23, 42, 0.5)";
+    countdownOverlay.style.backdropFilter = "blur(4px)";
+    countdownOverlay.innerHTML = '<div style="font-size: 6rem; font-weight: 800; color: #10b981; font-family: \'Space Mono\', monospace;" id="countdown-text">3</div>';
+    document.querySelector(".canvas-wrapper").appendChild(countdownOverlay);
+  }
+  countdownOverlay.classList.remove("hidden");
+  
+  let count = 3;
+  const countdownText = document.getElementById("countdown-text");
+  countdownText.textContent = count;
+  
+  // Hentikan input direction saat countdown
+  const originalPauseState = isPaused;
+  
+  const timer = setInterval(() => {
+    count--;
+    if (count > 0) {
+      countdownText.textContent = count;
+    } else {
+      clearInterval(timer);
+      countdownOverlay.classList.add("hidden");
+      isPaused = false;
+      if (isBgmEnabled) startBgm();
+    }
+  }, 1000);
 }
 
 function handleDirectionInput(e) {
   if (!isPlaying || isPaused) return;
+  // Jangan terima input jika sedang countdown
+  if (document.getElementById("countdown-overlay") && !document.getElementById("countdown-overlay").classList.contains("hidden")) return;
   const key = e.key.toLowerCase();
   
   if ((e.key === "ArrowLeft" || key === "a") && currentDirection !== "RIGHT") {
@@ -400,6 +451,10 @@ function drawRoundRect(x, y, w, h, r) {
 }
 
 function startGame() {
+  const countdownOverlay = document.getElementById("countdown-overlay");
+  if (countdownOverlay) {
+    countdownOverlay.classList.add("hidden");
+  }
   if (gameInterval) {
     clearInterval(gameInterval);
     gameInterval = null;
