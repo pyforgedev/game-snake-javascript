@@ -1,162 +1,278 @@
-let game;
+let gameInterval = null;
+let timerInterval = null;
 
-var cvs = document.getElementById("snake");
-var ctx = cvs.getContext("2d");
-var snake_score = document.getElementById("score");
-var snake_time = document.getElementById("time");
+const cvs = document.getElementById("snake");
+const ctx = cvs.getContext("2d");
+const snakeScoreEl = document.getElementById("score");
+const snakeTimeEl = document.getElementById("time");
 
-// ukuran box
+const startOverlay = document.getElementById("start-overlay");
+const gameoverOverlay = document.getElementById("gameover-overlay");
+const finalScoreSpan = document.getElementById("final-score");
+const finalTimeSpan = document.getElementById("final-time");
+
+const btnStart = document.getElementById("btn-start");
+const btnRestart = document.getElementById("btn-restart");
+
 const box = 30;
+const cols = 40;
+const rows = 16;
 
-// membuat kepala ular
 let snake = [];
-snake[0] = {
-  x: 9 * box,
-  y: 10 * box,
-};
+let food = {};
+let currentDirection = "";
+let timeRemaining = 60;
+let score = 0;
+let isPlaying = false;
 
-// membuat makanan
-let food = {
-  x: Math.floor(Math.random() * 39 + 1) * box,
-  y: Math.floor(Math.random() * 15 + 1) * box,
-};
+// Event Listeners
+btnStart.addEventListener("click", startGame);
+btnRestart.addEventListener("click", reloadGame);
+document.addEventListener("keydown", handleDirectionInput);
 
-// atur keyboard control
-document.addEventListener("keydown", direction);
-var alur;
-var waktu = 60;
-snake_time.innerHTML = waktu;
-
-function direction(e) {
-  var key = e.keyCode;
-
-  if (key == 37 && alur != "RIGHT") alur = "LEFT";
-  else if (key == 38 && alur != "DOWN") alur = "UP";
-  else if (key == 39 && alur != "LEFT") alur = "RIGHT";
-  else if (key == 40 && alur != "UP") alur = "DOWN";
+function handleDirectionInput(e) {
+  if (!isPlaying) return;
+  const key = e.key.toLowerCase();
+  
+  if ((e.key === "ArrowLeft" || key === "a") && currentDirection !== "RIGHT") {
+    currentDirection = "LEFT";
+  } else if ((e.key === "ArrowUp" || key === "w") && currentDirection !== "DOWN") {
+    currentDirection = "UP";
+  } else if ((e.key === "ArrowRight" || key === "d") && currentDirection !== "LEFT") {
+    currentDirection = "RIGHT";
+  } else if ((e.key === "ArrowDown" || key === "s") && currentDirection !== "UP") {
+    currentDirection = "DOWN";
+  }
 }
 
-// nilai awal
-var nilai = 0;
-
-// cek saat tabrakan dengan ekor
-function tabrakan(head, body) {
-  for (var i = 0; i < body.length; i++) {
-    if (head.x == body[i].x && head.y == body[i].y) return true;
+// Cari posisi acak untuk makanan yang tidak menimpa ular
+function generateFood() {
+  let newFood;
+  let onSnake = true;
+  
+  while (onSnake) {
+    newFood = {
+      x: Math.floor(Math.random() * cols) * box,
+      y: Math.floor(Math.random() * rows) * box
+    };
+    
+    onSnake = false;
+    for (let i = 0; i < snake.length; i++) {
+      if (snake[i].x === newFood.x && snake[i].y === newFood.y) {
+        onSnake = true;
+        break;
+      }
+    }
   }
+  return newFood;
+}
 
+// Cek tabrakan ekor
+function checkCollision(head, body) {
+  for (let i = 0; i < body.length; i++) {
+    if (head.x === body[i].x && head.y === body[i].y) return true;
+  }
   return false;
 }
 
+function initGame() {
+  snake = [];
+  snake[0] = {
+    x: 9 * box,
+    y: 8 * box
+  };
+  
+  food = generateFood();
+  currentDirection = ""; // Ular diam sampai tombol arah ditekan
+  score = 0;
+  timeRemaining = 60;
+  
+  snakeScoreEl.textContent = score;
+  snakeTimeEl.textContent = timeRemaining;
+}
+
 function draw() {
-  // menggambar background
-  const cellSize = 30;
-  for (let i = 0; i < 40; i++) {
-    for (let j = 0; j < 16; j++) {
-      const color = (i + j) % 2 === 0 ? "#36c2ce" : "white";
-      ctx.fillStyle = color;
-      ctx.fillRect(i * cellSize, j * cellSize, cellSize, cellSize);
+  // Bersihkan canvas & buat background papan catur retro gelap
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      ctx.fillStyle = (i + j) % 2 === 0 ? "#1e293b" : "#0f172a";
+      ctx.fillRect(i * box, j * box, box, box);
     }
   }
 
-  for (var i = 0; i < snake.length; i++) {
-    // warna ular
-    ctx.fillStyle = i == 0 ? "#478CCF" : "white";
-    ctx.fillRect(snake[i].x, snake[i].y, box, box);
+  // Gambar Makanan (Apple style bulat & berkilau)
+  const radius = box / 2;
+  const foodX = food.x + radius;
+  const foodY = food.y + radius;
+  
+  // Bayangan makanan
+  ctx.beginPath();
+  ctx.arc(foodX, foodY + 2, radius - 2, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+  ctx.fill();
 
-    // warna garis ular
-    ctx.strokeStyle = "black";
-    ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+  // Tubuh makanan
+  ctx.beginPath();
+  ctx.arc(foodX, foodY, radius - 2, 0, Math.PI * 2);
+  ctx.fillStyle = "#ef4444";
+  ctx.fill();
+  
+  // Efek kilau makanan
+  ctx.beginPath();
+  ctx.arc(foodX - 3, foodY - 3, 3, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+  ctx.fill();
+
+  // Daun kecil
+  ctx.beginPath();
+  ctx.ellipse(foodX + 2, foodY - radius + 2, 3, 5, Math.PI / 4, 0, Math.PI * 2);
+  ctx.fillStyle = "#10b981";
+  ctx.fill();
+
+  // Gambar Ular
+  for (let i = 0; i < snake.length; i++) {
+    const isHead = i === 0;
+    
+    // Gradien warna ular (kepala hijau emerald terang, ekor memudar agak gelap)
+    const ratio = i / snake.length;
+    ctx.fillStyle = isHead ? "#10b981" : `rgba(5, 150, 105, ${1 - ratio * 0.6})`;
+    
+    const x = snake[i].x;
+    const y = snake[i].y;
+    const padding = 2;
+    const size = box - padding * 2;
+    
+    // Gambar round rect untuk badan/kepala ular
+    drawRoundRect(x + padding, y + padding, size, size, isHead ? 8 : 4);
+
+    // Detail mata jika kepala
+    if (isHead) {
+      ctx.fillStyle = "#ffffff";
+      let eye1X, eye1Y, eye2X, eye2Y;
+      
+      // Posisi mata dinamis berdasarkan arah gerak
+      if (currentDirection === "LEFT") {
+        eye1X = x + 8; eye1Y = y + 8;
+        eye2X = x + 8; eye2Y = y + 20;
+      } else if (currentDirection === "UP") {
+        eye1X = x + 8; eye1Y = y + 8;
+        eye2X = x + 20; eye2Y = y + 8;
+      } else if (currentDirection === "RIGHT") {
+        eye1X = x + 20; eye1Y = y + 8;
+        eye2X = x + 20; eye2Y = y + 20;
+      } else { // DOWN atau diam
+        eye1X = x + 8; eye1Y = y + 20;
+        eye2X = x + 20; eye2Y = y + 20;
+      }
+      
+      ctx.beginPath();
+      ctx.arc(eye1X, eye1Y, 3, 0, Math.PI * 2);
+      ctx.arc(eye2X, eye2Y, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pupil hitam
+      ctx.fillStyle = "#000000";
+      ctx.beginPath();
+      ctx.arc(eye1X, eye1Y, 1.5, 0, Math.PI * 2);
+      ctx.arc(eye2X, eye2Y, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
-  // warna makanan
-  ctx.fillStyle = "#ff9800";
-  ctx.fillRect(food.x, food.y, box, box);
-  ctx.strokeStyle = "black";
-  ctx.strokeRect(food.x, food.y, box, box);
+  // Ular bergerak hanya jika pemain sudah memilih arah
+  if (currentDirection !== "") {
+    let snakeX = snake[0].x;
+    let snakeY = snake[0].y;
 
-  // kepala ular lama
-  let snakeX = snake[0].x;
-  let snakeY = snake[0].y;
+    if (currentDirection === "LEFT") snakeX -= box;
+    else if (currentDirection === "UP") snakeY -= box;
+    else if (currentDirection === "RIGHT") snakeX += box;
+    else if (currentDirection === "DOWN") snakeY += box;
 
-  // atur gerakan ular
-  if (alur == "LEFT") snakeX -= box;
-  else if (alur == "UP") snakeY -= box;
-  else if (alur == "RIGHT") snakeX += box;
-  else if (alur == "DOWN") snakeY += box;
+    const newHead = { x: snakeX, y: snakeY };
 
-  // saat menabrak makanan
-  if (snakeX == food.x && snakeY == food.y) {
-    // nilai bertambah
-    nilai++;
-    snake_score.innerHTML = nilai;
+    // Deteksi tabrakan dinding atau ekor sendiri
+    if (
+      snakeX >= cols * box ||
+      snakeX < 0 ||
+      snakeY >= rows * box ||
+      snakeY < 0 ||
+      checkCollision(newHead, snake)
+    ) {
+      endGame();
+      return;
+    }
 
-    // membuat makanan baru
-    food = {
-      x: Math.floor(Math.random() * 39 + 1) * box,
-      y: Math.floor(Math.random() * 15 + 1) * box,
-    };
-  } else {
-    snake.pop();
-  }
+    // Deteksi makan
+    if (snakeX === food.x && snakeY === food.y) {
+      score++;
+      snakeScoreEl.textContent = score;
+      food = generateFood();
+    } else {
+      snake.pop();
+    }
 
-  let newHead = {
-    x: snakeX,
-    y: snakeY,
-  };
-
-  // saat menabrak batas & ekor
-  if (
-    snakeX > 39 * box ||
-    snakeX < 0 * box ||
-    snakeY < 0 * box ||
-    snakeY > 15 * box ||
-    tabrakan(newHead, snake)
-  ) {
-    // menghentikan game
-    clearInterval(game);
-
-    setTimeout(notif, 100);
-  }
-
-  snake.unshift(newHead);
-
-  // cek waktu habis
-  if (waktu == 0) {
-    clearInterval(game);
-
-    setTimeout(notif, 100);
+    snake.unshift(newHead);
   }
 }
 
-// fungsi restart
-function reload_game() {
-  location.reload();
-
-  document.getElementById("btn-start").style.display = "block";
+// Helper untuk menggambar kotak berujung melengkung
+function drawRoundRect(x, y, w, h, r) {
+  if (w < 2 * r) r = w / 2;
+  if (h < 2 * r) r = h / 2;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+  ctx.fill();
 }
 
-const snake_timeout = setTimeout(time, 1000);
+function startGame() {
+  if (gameInterval) clearInterval(gameInterval);
+  if (timerInterval) clearInterval(timerInterval);
 
-function start_game() {
-  game = setInterval(draw, 100);
-
-  document.getElementById("btn-start").style.display = "none";
-  document.getElementById("btn-restart").style.display = "block";
+  initGame();
+  isPlaying = true;
+  
+  startOverlay.classList.add("hidden");
+  gameoverOverlay.classList.add("hidden");
+  
+  // Game tick interval
+  gameInterval = setInterval(draw, 100);
+  
+  // Timer interval
+  timerInterval = setInterval(() => {
+    // Timer berkurang hanya jika ular mulai bergerak
+    if (currentDirection !== "") {
+      timeRemaining--;
+      snakeTimeEl.textContent = timeRemaining;
+      
+      if (timeRemaining <= 0) {
+        endGame();
+      }
+    }
+  }, 1000);
 }
 
-// fungsi hitung mundur
-function time() {
-  setTimeout(time, 1000);
-  waktu--;
-  snake_time.innerHTML = waktu;
-  if (waktu < 0) {
-    waktu = 0;
-    clearTimeout(time);
-  }
+function endGame() {
+  isPlaying = false;
+  if (gameInterval) clearInterval(gameInterval);
+  if (timerInterval) clearInterval(timerInterval);
+  
+  finalScoreSpan.textContent = score;
+  finalTimeSpan.textContent = timeRemaining;
+  
+  gameoverOverlay.classList.remove("hidden");
 }
 
-// pesan berakhir
-function notif(val) {
-  alert("Game over!!!\n" + "Nilai : " + nilai + "\nSisa waktu : " + waktu);
+function reloadGame() {
+  gameoverOverlay.classList.add("hidden");
+  startGame();
 }
+
+// Gambar screen awal sekali saja
+initGame();
+draw();
